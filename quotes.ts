@@ -1,8 +1,8 @@
 import express from 'express'
 import cors from 'cors'
-import { authors, quotes } from './data'
+import { authors, quotesData } from './data'
 
-
+let quotes = quotesData
 
 
 
@@ -58,31 +58,65 @@ app.get('/quotes', (req, res) => {
   app.post('/quotes', (req, res) => {
     let errors: string[] = []
 
-    if (typeof req.body.name !== 'string') {
-      errors.push('Name not provided or not a string.')
-    }
+   
 
-    if (typeof req.body.age !== 'number') {
-      errors.push('Age not provided or not a number.')
+    if (typeof req.body.authorId !== 'number') {
+      errors.push('Author Id not provided or not a number.')
     }
 
     if (typeof req.body.quote !== 'string') {
       errors.push('Quote not provided or not a string.')
     }
 
+    let author = authors.find(author => author.id === req.body.authorId)
+    if (!author) {
+      errors.push("Author doesn'n exist")
+    }
     if (errors.length === 0) {
       const newItem = {
-        id: quotes[quotes.length -1].id + 1,
-        name:req.body.name,
-        age: req.body.age,
-        image: req.body.image,
+        id: quotes.length === 0 ? 1 : quotes[quotes.length -1].id + 1,
+        authorId: req.body.authorId,
         quote: req.body.quote
        }
-       
+     quotes.push(newItem)  
     res.send(newItem)
   } else {
     res.status(400).send({errors: errors})
   }
+  })
+
+  app.delete('/quotes/:id', (req, res) => {
+    const id = Number(req.params.id)
+    const indexToDelete = quotes.findIndex(quote => quote.id === id)
+
+    if (indexToDelete > -1) {
+      quotes = quotes.filter(quote => quote.id !== id)
+      res.send({ message: 'Quote deleted successfully'})
+    } else {
+      res.status(404).send({ error: 'quote not found.'});
+      
+    }
+    
+  })
+
+  app.patch('/quotes/:id', (req, res) => {
+    let id = Number(req.params.id)
+    let match = quotes.find(quote => quote.id === id)
+
+    if (match) {
+
+       if (req.body.authorId) {
+        match.authorId = req.body.authorId
+       }
+
+      if (req.body.quote) {
+        match.quote = req.body.quote
+       }
+
+      res.send(match)
+    } else {
+      res.status(404).send({ error: 'Quoote not found'})
+    }
   })
 
   app.get('/authors', (req, res) => {
@@ -93,8 +127,36 @@ app.get('/quotes', (req, res) => {
     res.send(authorsToSend)
   })
 
-  app.post('/authors', (req, res) => {})
+  app.post('/authors', (req, res) => {
+    let errors: string[] = []
 
+    if (typeof req.body.name !== 'string') {
+      errors.push('Author name not provided or not a string.')
+    }
+
+    if (typeof req.body.age !== 'number') {
+      errors.push('Age  not provided or not a number.')
+    }
+
+    if (typeof req.body.image !== 'string') {
+      errors.push('Image not provided or not a string.')
+    }
+
+ 
+    if (errors.length === 0) {
+      const newItem = {
+        id: quotes[quotes.length -1].id + 1,
+        name: req.body.name,
+        age: req.body.age,
+        image: req.body.image
+       }
+     authors.push(newItem)
+    res.send(newItem)
+  } else {
+    res.status(400).send({errors: errors})
+  }
+  })
+  
   app.get('/queryStuff', (req, res) => {
     console.log(req.query)
     res.send({message: 'Hello lovely'})

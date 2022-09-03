@@ -1,4 +1,10 @@
-export const quotes = [
+type quote = {
+  id:number
+  authorId:number
+  quote:string
+}
+
+export const quotesData: quote[] = [
   {
     id: 1,
     authorId: 4,
